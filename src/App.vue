@@ -10,7 +10,8 @@
 <script lang="coffee">
     import 'css-baseline/css/4.css'
     import * as Three from 'three'
-
+    import * as tools from './utils/matrix.coffee'
+    
     export default
         name: 'ThreeTest'
         data: ->
@@ -34,9 +35,9 @@
                     else if e.code == "ArrowRight"
                         this.rotationX += this.incrementAmount
                     else if e.code == "ArrowUp"
-                        this.rotationY += this.incrementAmount
-                    else if (e.code == "ArrowDown")
                         this.rotationY -= this.incrementAmount
+                    else if (e.code == "ArrowDown")
+                        this.rotationY += this.incrementAmount
 
                 # 
                 # setup three JS

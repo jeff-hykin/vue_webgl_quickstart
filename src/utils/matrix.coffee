@@ -1,14 +1,14 @@
 import * as math from 'mathjs'
 
-let translateBy = (vec, translation) => {
+translateBy = (vec, translation) =>
     return math.add(vec, translation)
-}
 
-let rotateBy = (vec, rotations) => {
-    // map from degrees to radians
-    let [ xRotate, yRotate, zRotate ] = rotations.map(each => (each * Math.PI) /180)
-    let newVec = vec
-    // perform the x axis rotation
+
+rotateBy = (vec, rotations) =>
+    # map from degrees to radians
+    [ xRotate, yRotate, zRotate ] = rotations.map((each) => (each * Math.PI) /180)
+    newVec = vec
+    # perform the x axis rotation
     newVec = math.multiply(
         [
             [ math.cos(xRotate), -math.sin(xRotate), 0 ],
@@ -17,7 +17,7 @@ let rotateBy = (vec, rotations) => {
         ],
         newVec
     )
-    // perform the y axis rotation
+    # perform the y axis rotation
     newVec = math.multiply(
         [
             [ math.cos(xRotate), 0, -math.sin(xRotate) ],
@@ -26,7 +26,7 @@ let rotateBy = (vec, rotations) => {
         ],
         newVec
     )
-    // perform the z axis rotation
+    # perform the z axis rotation
     newVec = math.multiply(
         [
             [ 1, 0                ,  0                 ],
@@ -36,4 +36,3 @@ let rotateBy = (vec, rotations) => {
         newVec
     )
     return newVec
-}
