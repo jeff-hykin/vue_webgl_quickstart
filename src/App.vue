@@ -10,8 +10,19 @@
 
 <script lang="coffee">
     import 'css-baseline/css/4.css'
-    import * as Three from 'three'
-    import * as tools from './utils/matrix.coffee'
+    import * as THREE from 'three'
+    import OrbitControls from 'three-orbitcontrols'
+    import * as math from 'mathjs'
+    import { rotationMatrix, multiply, translationMatrix, print} from './utils/matrix.coffee'
+    Matrix = THREE.Matrix4
+    
+    # debugging
+    window.math = math
+    window.rotationMatrix = rotationMatrix
+    window.multiply = multiply
+    window.translationMatrix = translationMatrix
+    window.print = print
+    
     
     export default
         name: 'ThreeTest'
@@ -20,53 +31,104 @@
                 camera: null,
                 scene: null,
                 renderer: null,
-                mesh: null,
-                rotationX: 0,
-                rotationY: 0,
-                incrementAmount: 0.01,
+                cube0: null,
+                cube1: null,
+                cube1Data: {
+                    t1: [ 0  , 0  ,  0 ],
+                    r1: [ 0  , 0  ,  0 ],
+                    t2: [ 0  , 0  ,  0 ],
+                },
+                cube2: null,
+                cube2Data: {
+                    t1: [ 0.1, 0.1,  0 ],
+                    r1: [ 0  , 0  ,  0 ],
+                    t2: [ 0.1, 0.1,  0 ],
+                },
+                transformations: [],
+                frames: 0,
             }
         methods:
             init: ->
                 # 
                 # setup keybindings
                 # 
-                window.addEventListener "keydown", (e) => 
-                    if e.code == "ArrowLeft"
-                        this.rotationX -= this.incrementAmount
-                    else if e.code == "ArrowRight"
-                        this.rotationX += this.incrementAmount
-                    else if e.code == "ArrowUp"
-                        this.rotationY -= this.incrementAmount
-                    else if (e.code == "ArrowDown")
-                        this.rotationY += this.incrementAmount
+                window.addEventListener "keydown", (eventObj) => 
+                    if eventObj.code == "ArrowLeft"
+                        transformations.push(translationMatrix(1,0,0))
+                    # else if eventObj.code == "ArrowRight"
+                        
+                    # else if eventObj.code == "ArrowUp"
+                        
+                    # else if eventObj.code == "ArrowDown"
 
                 # 
                 # setup three JS
                 # 
                 container = document.body
                 height = container.clientHeight || 200
-                
-                this.camera = new Three.PerspectiveCamera(70, container.clientWidth/height, 0.01, 10)
+                this.camera = new THREE.PerspectiveCamera(50, container.clientWidth/height) # 70, container.clientWidth/height, 0.01, 10                
                 this.camera.position.z = 1
-
-                this.scene = new Three.Scene()
-
-                geometry = new Three.BoxGeometry(0.2, 0.2, 0.2)
-                material = new Three.MeshNormalMaterial()
-
-                this.mesh = new Three.Mesh(geometry, material)
-                this.scene.add(this.mesh)
-
-                this.renderer = new Three.WebGLRenderer({antialias: true})
+                this.renderer = new THREE.WebGLRenderer({antialias: true})
                 this.renderer.setSize(container.clientWidth, height)
+                this.controls = new OrbitControls( this.camera, this.renderer.domElement )
                 container.appendChild(this.renderer.domElement)
+                this.scene = new THREE.Scene()
+                window.transformations = this.transformations
+                
+                # helpers for the cubes
+                geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2)
+                material = new THREE.MeshNormalMaterial()
+                
+                # cube0
+                this.cube0 = new THREE.Mesh(geometry, material)
+                this.cube0.matrixAutoUpdate = false
+                this.scene.add(this.cube0)
+                window.cube0 = this.cube0
+                
+                # cube1
+                this.cube1 = new THREE.Mesh(geometry, material)
+                this.cube1.matrixAutoUpdate = false
+                this.scene.add(this.cube1)
+                window.cube1 = this.cube1
+                window.cube1Data = this.cube1Data
+                
+                # cube2
+                this.cube2 = new THREE.Mesh(geometry, material)
+                this.cube2.matrixAutoUpdate = false
+                this.scene.add(this.cube2)
+                window.cube2 = this.cube2
+                window.cube2Data = this.cube2Data
+                
+                # vector
+                # this.scene.add(new THREE.ArrowHelper( new THREE.Vector3(...[0.5,0.4,0.6]).normalize(), new THREE.Vector3(...[0,0,0]), 1, 0xffffff ) )
+                
 
             animate: ->
                 requestAnimationFrame(this.animate)
-                # NOTE: these are intentionally switched, for some reason they don't match up
-                # (maybe the whole camera-perspective is rotated? not sure)
-                this.mesh.rotation.x += this.rotationY
-                this.mesh.rotation.y += this.rotationX
+                
+                # cube1 transforms
+                this.transformations.push(translationMatrix(...this.cube1Data.t1))
+                this.transformations.push(rotationMatrix(...this.cube1Data.r1))
+                this.transformations.push(translationMatrix(...this.cube1Data.t2))
+                this.cube1.matrix.set(...multiply(...this.transformations).elements)
+                if true
+                    # cube2 transforms
+                    this.transformations.push(translationMatrix(...this.cube2Data.t1))
+                    this.transformations.push(rotationMatrix(...this.cube2Data.r1))
+                    this.transformations.push(translationMatrix(...this.cube2Data.t2))
+                    this.cube2.matrix.set(...multiply(...this.transformations).elements)
+                    this.transformations.pop()
+                    this.transformations.pop()
+                    this.transformations.pop()
+                
+                this.transformations.pop()
+                this.transformations.pop()
+                this.transformations.pop()
+                
+                # this.transformations.push(translationMatrix(-0.1,0,0))
+                # this.cube0.matrix.set(...multiply(...this.transformations).elements)
+                # this.transformations.pop()
+                
                 this.renderer.render(this.scene, this.camera)
 
         mounted: ->
