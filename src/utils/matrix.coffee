@@ -22,9 +22,7 @@ module.exports =
         return output
 
     rotationMatrix: (x,y,z) =>
-        elements = [...module.exports.rotationMatrixFor([x,y,z]).flat()]
-        output = new Matrix().set(...elements)
-        return output 
+        new Matrix().set(...module.exports.rotationMatrixFor([x,y,z]).flat()) 
 
     transpose: (matrix) =>
         [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p] = matrix.elements
