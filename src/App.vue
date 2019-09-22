@@ -199,8 +199,8 @@
                     this.transformations.shift()
 
             animate: ->
-                # after *framerate* time-interval, ask to render another frame
                 if framerate < 30
+                    # after *framerate* time-interval, ask to render another frame
                     setTimeout( (()=>requestAnimationFrame(this.animate)), 1000 / framerate )
                 else
                     requestAnimationFrame(this.animate)
