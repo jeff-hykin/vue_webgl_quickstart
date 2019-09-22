@@ -15,7 +15,6 @@
     import OrbitControls from 'three-orbitcontrols'
     import * as math from 'mathjs'
     import { rotationMatrix, multiply, translationMatrix, print} from './utils/matrix.coffee'
-    Matrix = THREE.Matrix4
     
     # debugging
     window.math = math
@@ -201,7 +200,7 @@
 
             animate: ->
                 # after *framerate* time-interval, ask to render another frame
-                if framerate < 60
+                if framerate < 30
                     setTimeout( (()=>requestAnimationFrame(this.animate)), 1000 / framerate )
                 else
                     requestAnimationFrame(this.animate)
