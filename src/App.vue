@@ -1,4 +1,5 @@
 <template>
+    <div ref="threejsContainer" style="width: 100vw; height: 100vh;"></div>
 </template>
 
 <style>
@@ -56,7 +57,7 @@
                 # 
                 # setup three JS
                 # 
-                container = document.body
+                container = this.$refs["threejsContainer"]
                 height = container.clientHeight or 200
                 this.setupKeybindings()
                 this.camera = new THREE.PerspectiveCamera(50, container.clientWidth/height) # 70, container.clientWidth/height, 0.01, 10                
@@ -68,8 +69,7 @@
                 window.transformations = this.transformations
                 
                 # how far back the camera starts
-                this.camera.position.z = 60
-                this.camera.position.y = 11
+                this.camera.position.z = 70
                 
                 
                 # cube0
@@ -201,7 +201,10 @@
 
             animate: ->
                 # after *framerate* time-interval, ask to render another frame
-                setTimeout( (()=>requestAnimationFrame(this.animate)), 1000 / framerate )
+                if framerate < 60
+                    setTimeout( (()=>requestAnimationFrame(this.animate)), 1000 / framerate )
+                else
+                    requestAnimationFrame(this.animate)
                 
                 # cube0 transforms
                 this.do
