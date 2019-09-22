@@ -42,7 +42,7 @@
                 renderer: null,
                 cube0: null,
                 activeObject: 1,
-                objects: [],
+                movableObjects: [],
                 cube0: null,
                 cube1: null,
                 cube2: null,
@@ -54,71 +54,21 @@
         methods:
             init: ->
                 # 
-                # setup keybindings
-                # 
-                window.addEventListener "keydown", (eventObj) => 
-                    # object controls
-                    if activeObject and objects[activeObject] and objects[activeObject].transformationData
-                        objTransform = objects[activeObject].transformationData
-                        # translation controls
-                        if true
-                            translationVec = objTransform.t1
-                            # forward backwards
-                            if eventObj.code == "KeyW"
-                                translationVec[2] += this.translationRate
-                            else if eventObj.code == "KeyS"
-                                translationVec[2] -= this.translationRate
-                            # left right
-                            else if eventObj.code == "KeyA"
-                                translationVec[0] += this.translationRate
-                            else if eventObj.code == "KeyD"
-                                translationVec[0] -= this.translationRate
-                            # up down
-                            else if eventObj.code == "KeyR"
-                                translationVec[1] += this.translationRate
-                            else if eventObj.code == "KeyF"
-                                translationVec[1] -= this.translationRate
-                        
-                        # rotation controls
-                        if true
-                            rotationVec = objTransform.r1
-                            # top-away-from-camera, top-towards-camera 
-                            if eventObj.code == "KeyI"
-                                rotationVec[2] += this.rotationRate
-                            else if eventObj.code == "KeyK"
-                                rotationVec[2] -= this.rotationRate
-                            # top-towards-left, top-towards-right
-                            else if eventObj.code == "KeyU"
-                                rotationVec[1] += this.rotationRate
-                            else if eventObj.code == "KeyO"
-                                rotationVec[1] -= this.rotationRate
-                            # left-side-away-from-camera, left-side-towards-camera
-                            else if eventObj.code == "KeyJ"
-                                rotationVec[0] += this.rotationRate
-                            else if eventObj.code == "KeyL"
-                                rotationVec[0] -= this.rotationRate
-                        
-                    # else if eventObj.code == "ArrowLeft"
-                        # transformations.push(translationMatrix(1,0,0))
-                    # else if eventObj.code == "ArrowRight"
-                        
-                    # else if eventObj.code == "ArrowUp"
-                        
-                    # else if eventObj.code == "ArrowDown"
-
-                # 
                 # setup three JS
                 # 
                 container = document.body
                 height = container.clientHeight or 200
+                this.setupKeybindings()
                 this.camera = new THREE.PerspectiveCamera(50, container.clientWidth/height) # 70, container.clientWidth/height, 0.01, 10                
-                this.camera.position.z = 30
                 this.renderer = new THREE.WebGLRenderer({antialias: true})
                 this.renderer.setSize(container.clientWidth, height)
                 this.controls = new OrbitControls( this.camera, this.renderer.domElement )
                 this.scene = new THREE.Scene()
                 container.appendChild(this.renderer.domElement)
                 window.transformations = this.transformations
+                
+                # how far back the camera starts
+                this.camera.position.z = 50
                 
                 
                 # cube0
@@ -145,6 +95,53 @@
                 # vector
                 # this.scene.add(new THREE.ArrowHelper( new THREE.Vector3(...[0.5,0.4,0.6]).normalize(), new THREE.Vector3(...[0,0,0]), 1, 0xffffff ) )
             
+            setupKeybindings: ->
+                window.addEventListener "keydown", (eventObj) => 
+                    # object controls
+                    if this.movableObjects[this.activeObject] and this.movableObjects[this.activeObject].transformationData
+                        objTransform = this.movableObjects[this.activeObject].transformationData
+                        # translation controls
+                        if true
+                            translationVec = objTransform.t1
+                            # forward backwards
+                            if eventObj.code == "KeyW"
+                                translationVec[2] -= this.translationRate
+                            else if eventObj.code == "KeyS"
+                                translationVec[2] += this.translationRate
+                            # left right
+                            else if eventObj.code == "KeyA"
+                                translationVec[0] -= this.translationRate
+                            else if eventObj.code == "KeyD"
+                                translationVec[0] += this.translationRate
+                            # up down
+                            else if eventObj.code == "KeyR"
+                                translationVec[1] += this.translationRate
+                            else if eventObj.code == "KeyF"
+                                translationVec[1] -= this.translationRate
+                        
+                        # rotation controls
+                        if true
+                            rotationVec = objTransform.r1
+                            # top-away-from-camera, top-towards-camera 
+                            if eventObj.code == "KeyI"
+                                rotationVec[0] -= this.rotationRate
+                            else if eventObj.code == "KeyK"
+                                rotationVec[0] += this.rotationRate
+                            # top-towards-left, top-towards-right
+                            else if eventObj.code == "KeyU"
+                                rotationVec[2] += this.rotationRate
+                            else if eventObj.code == "KeyO"
+                                rotationVec[2] -= this.rotationRate
+                            # left-side-away-from-camera, left-side-towards-camera
+                            else if eventObj.code == "KeyJ"
+                                rotationVec[1] += this.rotationRate
+                            else if eventObj.code == "KeyL"
+                                rotationVec[1] -= this.rotationRate
+                # else if eventObj.code == "ArrowLeft"
+                    # transformations.push(translationMatrix(1,0,0))
+                # else if eventObj.code == "ArrowRight"
+                # else if eventObj.code == "ArrowUp"
+                # else if eventObj.code == "ArrowDown"
             newCube: () ->
                 cube = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), new THREE.MeshNormalMaterial())
                 cube.matrixAutoUpdate = false
@@ -153,7 +150,7 @@
                     r1: [  0 ,  0 ,  0 ],
                     t2: [  0 ,  0 ,  0 ],
                 }
-                this.objects.push(cube)
+                this.movableObjects.push(cube)
                 this.scene.add(cube)
                 if not window.cubes
                     window.cubes = []
