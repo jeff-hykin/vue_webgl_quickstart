@@ -41,7 +41,7 @@
                 scene: null,
                 renderer: null,
                 cube0: null,
-                activeObject: 1,
+                activeObject: null,
                 movableObjects: [],
                 cube0: null,
                 cube1: null,
@@ -73,15 +73,21 @@
                 
                 # cube0
                 this.cube0 = this.newCube()
+                this.activeObject = this.cube0
                 
                 # cube1
                 this.cube1 = this.newCube()
+                this.cube1.transformationData = {
+                    t1: [ 10 , 10 ,  0 ],
+                    r1: [  0 ,  0 , 45 ],
+                    t2: [  0 ,  0 ,  0 ],
+                }
                 
                 # cube2
                 this.cube2 = this.newCube()
                 this.cube2.transformationData = {
                     t1: [ 10 , 10 ,  0 ],
-                    r1: [  0 ,  0 , 45 ],
+                    r1: [  0 ,  0 , 22 ],
                     t2: [  0 ,  0 ,  0 ],
                 }
                 
@@ -97,9 +103,16 @@
             
             setupKeybindings: ->
                 window.addEventListener "keydown", (eventObj) => 
+                    # changing the active object by pressing the number buttons
+                    match = eventObj.code.match(/Digit(\d+)/)
+                    if match
+                        activeObject = this.movableObjects[match[1]]
+                        if activeObject
+                            this.activeObject = activeObject
+                    
                     # object controls
-                    if this.movableObjects[this.activeObject] and this.movableObjects[this.activeObject].transformationData
-                        objTransform = this.movableObjects[this.activeObject].transformationData
+                    if this.activeObject and this.activeObject.transformationData
+                        objTransform = this.activeObject.transformationData
                         # translation controls
                         if true
                             translationVec = objTransform.t1
@@ -137,6 +150,8 @@
                                 rotationVec[1] += this.rotationRate
                             else if eventObj.code == "KeyL"
                                 rotationVec[1] -= this.rotationRate
+                        
+                        console.log 'objTransform =',objTransform
                 # else if eventObj.code == "ArrowLeft"
                     # transformations.push(translationMatrix(1,0,0))
                 # else if eventObj.code == "ArrowRight"
@@ -185,23 +200,33 @@
                 # after *framerate* time-interval, ask to render another frame
                 setTimeout( (()=>requestAnimationFrame(this.animate)), 1000 / framerate )
                 
-                # cube1 transforms
+                # cube0 transforms
                 this.do
-                    object: this.cube1
+                    object: this.cube0
                     actions: [
-                        ['translate', ...this.cube1.transformationData.t1],
-                        ['rotate'   , ...this.cube1.transformationData.r1],
-                        ['translate', ...this.cube1.transformationData.t2],
+                        ['translate', ...this.cube0.transformationData.t1],
+                        ['rotate'   , ...this.cube0.transformationData.r1],
+                        ['translate', ...this.cube0.transformationData.t2],
                     ]
+                    # cube1 transforms
                     attachedActions: [
-                        # cube 2 transformations
                         => this.do
-                                object: this.cube2
-                                actions: [
-                                    ['translate', ...this.cube2.transformationData.t1],
-                                    ['rotate'   , ...this.cube2.transformationData.r1],
-                                    ['translate', ...this.cube2.transformationData.t2],
-                                ]
+                            object: this.cube1
+                            actions: [
+                                ['translate', ...this.cube1.transformationData.t1],
+                                ['rotate'   , ...this.cube1.transformationData.r1],
+                                ['translate', ...this.cube1.transformationData.t2],
+                            ]
+                            # cube 2 transformations
+                            attachedActions: [
+                                => this.do
+                                    object: this.cube2
+                                    actions: [
+                                        ['translate', ...this.cube2.transformationData.t1],
+                                        ['rotate'   , ...this.cube2.transformationData.r1],
+                                        ['translate', ...this.cube2.transformationData.t2],
+                                    ]
+                            ]
                     ]
 
                 # render everything
