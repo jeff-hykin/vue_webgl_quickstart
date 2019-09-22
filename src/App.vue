@@ -23,7 +23,7 @@
     window.translationMatrix = translationMatrix
     window.print = print
     
-    framerate = 5 # fps
+    framerate = 60 # fps
     
     # tools 
     newSphere = (_this, location) ->
@@ -68,7 +68,8 @@
                 window.transformations = this.transformations
                 
                 # how far back the camera starts
-                this.camera.position.z = 50
+                this.camera.position.z = 60
+                this.camera.position.y = 11
                 
                 
                 # cube0
@@ -77,18 +78,20 @@
                 
                 # cube1
                 this.cube1 = this.newCube()
+                # how this cube will be positioned relative to cube0
                 this.cube1.transformationData = {
-                    t1: [ 10 , 10 ,  0 ],
-                    r1: [  0 ,  0 , 45 ],
-                    t2: [  0 ,  0 ,  0 ],
+                    t1: [  5 ,  5 ,  0 ],
+                    r1: [  0 ,  0 ,  0 ],
+                    t2: [  5 ,  5 ,  0 ],
                 }
                 
                 # cube2
                 this.cube2 = this.newCube()
+                # how this cube will be positioned relative to cube1
                 this.cube2.transformationData = {
-                    t1: [ 10 , 10 ,  0 ],
-                    r1: [  0 ,  0 , 22 ],
-                    t2: [  0 ,  0 ,  0 ],
+                    t1: [  5 ,  5 ,  0 ],
+                    r1: [  0 ,  0 ,  0 ],
+                    t2: [  5 ,  5 ,  0 ],
                 }
                 
                 # sphere
