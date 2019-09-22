@@ -17,7 +17,7 @@ module.exports =
 
     multiply: (...args) =>
         output = new Matrix()
-        while args.length
+        while args and args.length
             output = module.exports.multiply2(args.pop(), output.transpose())
         return output
 
