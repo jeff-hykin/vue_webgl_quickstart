@@ -103,11 +103,10 @@
                 # vector
                 # this.scene.add(new THREE.ArrowHelper( new THREE.Vector3(...[0.5,0.4,0.6]).normalize(), new THREE.Vector3(...[0,0,0]), 1, 0xffffff ) )
                 
-                this.texture = (new THREE.TextureLoader()).load('logo.png')
-
+                this.texture = (new THREE.TextureLoader()).load('racetrack.jpg')
                 # immediately use the texture for material creation
                 this.material = new THREE.MeshBasicMaterial( { map: this.texture } )
-                cube = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), this.material)
+                cube = new THREE.Mesh(new THREE.BoxGeometry(1024, 692, 1), this.material)
                 this.scene.add(cube)
                 
                 pointofLight = new THREE.PointLight( 0xffffff )
