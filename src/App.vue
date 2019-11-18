@@ -102,6 +102,20 @@
                 
                 # vector
                 # this.scene.add(new THREE.ArrowHelper( new THREE.Vector3(...[0.5,0.4,0.6]).normalize(), new THREE.Vector3(...[0,0,0]), 1, 0xffffff ) )
+                
+                this.texture = (new THREE.TextureLoader()).load('logo.png')
+
+                # immediately use the texture for material creation
+                this.material = new THREE.MeshBasicMaterial( { map: this.texture } )
+                cube = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), this.material)
+                this.scene.add(cube)
+                
+                pointofLight = new THREE.PointLight( 0xffffff )
+                pointofLight.position.x = 50
+                pointofLight.position.y = 50
+                pointofLight.position.z = 130
+                pointofLight.opacity = 300
+                this.scene.add(pointofLight)
             
             setupKeybindings: ->
                 window.addEventListener "keydown", (eventObj) => 
@@ -153,7 +167,6 @@
                             else if eventObj.code == "KeyL"
                                 rotationVec[1] -= this.rotationRate
                         
-                        console.log 'objTransform =',objTransform
                 # else if eventObj.code == "ArrowLeft"
                     # transformations.push(translationMatrix(1,0,0))
                 # else if eventObj.code == "ArrowRight"
