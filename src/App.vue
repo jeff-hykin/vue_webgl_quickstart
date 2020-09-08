@@ -1,244 +1,107 @@
 <template>
-    <div ref="threejsContainer" style="width: 100vw; height: 100vh;"></div>
+    <div ref="bodyReplacement" :style="`width: 100vw; height: 100vh; transform: scale(${zoomPercent/100});`" draggable="true" @dragstart="dragStart" @drag="dragging" @dragend="dragEnd" @wheel="scroll">
+        <div id="anchor" :style="`position: fixed; transform: translate(${livePositionX}px, ${livePositionY}px);`" >
+            <span style="background-color: red; min-height:2rem; min-width: 4rem;">Content</span>
+            <svg viewBox="0 0 240 80" xmlns="http://www.w3.org/2000/svg">
+                <!-- <style>.small {
+                        font: italic 13px sans-serif;
+                    }
+                    .heavy {
+                        font: bold 30px sans-serif;
+                    }
+
+                    /* Note that the color of the text is set with the    *
+                    * fill property, the color property is for HTML only */
+                    .Rrrrr {
+                        font: italic 40px serif;
+                        fill: red;
+                    }</style> -->
+
+                <text x="20" y="35" class="small">My</text>
+                <text x="40" y="35" class="heavy">cat</text>
+                <text x="55" y="55" class="small">is</text>
+                <text x="65" y="55" class="Rrrrr">Grumpy!</text>
+            </svg>
+        </div>
+    </div>
 </template>
 
 <style>
     html {
         overflow: hidden;
     }
+    #anchor {
+        overflow: visible;
+        height: 0;
+        width: 0;
+        /* transition: all 100ms ease-out; */
+    }
     
 </style>
 
-<script lang="coffee">
-    import 'css-baseline/css/4.css'
-    import * as THREE from 'three'
-    import OrbitControls from 'three-orbitcontrols'
-    import * as math from 'mathjs'
-    import { rotationMatrix, multiply, translationMatrix, print} from './utils/matrix.coffee'
-    
-    # debugging
-    window.math = math
-    window.rotationMatrix = rotationMatrix
-    window.multiply = multiply
-    window.translationMatrix = translationMatrix
-    window.print = print
-    
-    framerate = 60 # fps
-    
-    # tools 
-    newSphere = (_this, location) ->
-        sphere = new THREE.Mesh(new THREE.SphereGeometry( 5, 32, 32 ), new THREE.MeshNormalMaterial())
-        sphere.translateX(location[0])
-        sphere.translateY(location[1])
-        sphere.translateZ(location[2])
-        _this.scene.add(sphere)
-    
-    export default
-        name: 'ThreeTest'
-        data: ->
-            return {
-                camera: null,
-                scene: null,
-                renderer: null,
-                cube0: null,
-                activeObject: null,
-                movableObjects: [],
-                cube0: null,
-                cube1: null,
-                cube2: null,
-                transformations: [],
-                frames: 0,
-                translationRate: 3,
-                rotationRate: 5, # 5 degrees
-            }
-        methods:
-            init: ->
-                # 
-                # setup three JS
-                # 
-                container = this.$refs["threejsContainer"]
-                height = container.clientHeight or 200
-                this.setupKeybindings()
-                this.camera = new THREE.PerspectiveCamera(50, container.clientWidth/height) # 70, container.clientWidth/height, 0.01, 10                
-                this.renderer = new THREE.WebGLRenderer({antialias: true})
-                this.renderer.setSize(container.clientWidth, height)
-                this.controls = new OrbitControls( this.camera, this.renderer.domElement )
-                this.scene = new THREE.Scene()
-                container.appendChild(this.renderer.domElement)
-                window.transformations = this.transformations
-                
-                # how far back the camera starts
-                this.camera.position.z = 70
-                
-                
-                # cube0
-                this.cube0 = this.newCube()
-                this.activeObject = this.cube0
-                
-                # cube1
-                this.cube1 = this.newCube()
-                # how this cube will be positioned relative to cube0
-                this.cube1.transformationData = {
-                    t1: [  5 ,  5 ,  0 ],
-                    r1: [  0 ,  0 ,  0 ],
-                    t2: [  5 ,  5 ,  0 ],
-                }
-                
-                # cube2
-                this.cube2 = this.newCube()
-                # how this cube will be positioned relative to cube1
-                this.cube2.transformationData = {
-                    t1: [  5 ,  5 ,  0 ],
-                    r1: [  0 ,  0 ,  0 ],
-                    t2: [  5 ,  5 ,  0 ],
-                }
-                
-                # sphere
-                # this.sphere = new THREE.Mesh(new THREE.SphereGeometry( 5, 32, 32 ), new THREE.MeshNormalMaterial())
-                # this.sphere.matrixAutoUpdate = false
-                # this.scene.add(this.sphere)
-                # window.sphere = this.sphere
-                # window.sphereData = this.sphereData
-                
-                # vector
-                # this.scene.add(new THREE.ArrowHelper( new THREE.Vector3(...[0.5,0.4,0.6]).normalize(), new THREE.Vector3(...[0,0,0]), 1, 0xffffff ) )
+<script>
+import "css-baseline/css/4.css"
+
+// note
+    // the body is the one being dragged, but the inside is the one being offset
+    // also body is the one being scaled (as an attepmt to make zooming, zoom towards the center)
+// TODO:
+//  - try to fix the bounce issue when letting go of a drag
+//       best solution would be to make the dragable element 
+//  - the panning movement doesn't scale when zoomed in
+//  - create frames by saving an [ x, y, scale, and rotation ]
+//  - add svg objects with contentedible
+//  - allow the drag to be captured by smaller things
+//  - zoom isnt uniform because its a percent, maybe add some scaling of zoom
+export default {
+    data: ()=>({
+        startX: 0,
+        startY: 0,
+        changeX: 0,
+        changeY: 0,
+        savedPositionX: 0,
+        savedPositionY: 0,
+        livePositionX: 0,
+        livePositionY: 0,
+        zoomPercent: 100,
+    }),
+    mounted() {
+        window.app = this 
+        setInterval(() => {
+            console.debug(`JSON.stringify(this.$data) is:`,JSON.stringify(this.$data))
+        }, 500)
+    },
+    methods: {
+        dragEnd(eventObj) {
+            // save change
+            this.savedPositionX += eventObj.clientX - this.startX
+            this.savedPositionY += eventObj.clientY - this.startY
+            this.livePositionX = this.savedPositionX
+            this.livePositionY = this.savedPositionY
+            // reset temp vars
+            this.startX = 0
+            this.startY = 0
+            this.changeX = 0
+            this.changeY = 0
             
-            setupKeybindings: ->
-                window.addEventListener "keydown", (eventObj) => 
-                    # changing the active object by pressing the number buttons
-                    match = eventObj.code.match(/Digit(\d+)/)
-                    if match
-                        activeObject = this.movableObjects[match[1]]
-                        if activeObject
-                            this.activeObject = activeObject
-                    
-                    # object controls
-                    if this.activeObject and this.activeObject.transformationData
-                        objTransform = this.activeObject.transformationData
-                        # translation controls
-                        if true
-                            translationVec = objTransform.t1
-                            # forward backwards
-                            if eventObj.code == "KeyW"
-                                translationVec[2] -= this.translationRate
-                            else if eventObj.code == "KeyS"
-                                translationVec[2] += this.translationRate
-                            # left right
-                            else if eventObj.code == "KeyA"
-                                translationVec[0] -= this.translationRate
-                            else if eventObj.code == "KeyD"
-                                translationVec[0] += this.translationRate
-                            # up down
-                            else if eventObj.code == "KeyR"
-                                translationVec[1] += this.translationRate
-                            else if eventObj.code == "KeyF"
-                                translationVec[1] -= this.translationRate
-                        
-                        # rotation controls
-                        if true
-                            rotationVec = objTransform.r1
-                            # top-away-from-camera, top-towards-camera 
-                            if eventObj.code == "KeyI"
-                                rotationVec[0] -= this.rotationRate
-                            else if eventObj.code == "KeyK"
-                                rotationVec[0] += this.rotationRate
-                            # top-towards-left, top-towards-right
-                            else if eventObj.code == "KeyU"
-                                rotationVec[2] += this.rotationRate
-                            else if eventObj.code == "KeyO"
-                                rotationVec[2] -= this.rotationRate
-                            # left-side-away-from-camera, left-side-towards-camera
-                            else if eventObj.code == "KeyJ"
-                                rotationVec[1] += this.rotationRate
-                            else if eventObj.code == "KeyL"
-                                rotationVec[1] -= this.rotationRate
-                        
-                        console.log 'objTransform =',objTransform
-                # else if eventObj.code == "ArrowLeft"
-                    # transformations.push(translationMatrix(1,0,0))
-                # else if eventObj.code == "ArrowRight"
-                # else if eventObj.code == "ArrowUp"
-                # else if eventObj.code == "ArrowDown"
-            newCube: () ->
-                cube = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), new THREE.MeshNormalMaterial())
-                cube.matrixAutoUpdate = false
-                cube.transformationData = {
-                    t1: [  0 ,  0 ,  0 ],
-                    r1: [  0 ,  0 ,  0 ],
-                    t2: [  0 ,  0 ,  0 ],
-                }
-                this.movableObjects.push(cube)
-                this.scene.add(cube)
-                if not window.cubes
-                    window.cubes = []
-                window.cubes.push(cube)
-                return cube
-            
-            do: ({actions, object, attachedActions})->
-                # perform matrix manipulations
-                for eachAction in actions
-                    actionInfo =  [...eachAction]
-                    actionName = actionInfo.shift()
-                    if actionName == 'translate'
-                        this.transformations.unshift(translationMatrix(...actionInfo))
-                    else if actionName == 'rotate'
-                        this.transformations.unshift(rotationMatrix(...actionInfo))
-                    else
-                        console.log 'actionName is not recognized, it is',actionName
-                
-                # move the object
-                object.matrix.set(...multiply(...this.transformations).elements)
-                
-                # do all of the attached actions
-                if attachedActions
-                    for eachAttachAction in attachedActions
-                        eachAttachAction()
-                
-                # remove the transformations before all of the other actions
-                for each in actions
-                    this.transformations.shift()
-
-            animate: ->
-                if framerate < 30
-                    # after *framerate* time-interval, ask to render another frame
-                    setTimeout( (()=>requestAnimationFrame(this.animate)), 1000 / framerate )
-                else
-                    requestAnimationFrame(this.animate)
-                
-                # cube0 transforms
-                this.do
-                    object: this.cube0
-                    actions: [
-                        ['translate', ...this.cube0.transformationData.t1],
-                        ['rotate'   , ...this.cube0.transformationData.r1],
-                        ['translate', ...this.cube0.transformationData.t2],
-                    ]
-                    # cube1 transforms
-                    attachedActions: [
-                        => this.do
-                            object: this.cube1
-                            actions: [
-                                ['translate', ...this.cube1.transformationData.t1],
-                                ['rotate'   , ...this.cube1.transformationData.r1],
-                                ['translate', ...this.cube1.transformationData.t2],
-                            ]
-                            # cube 2 transformations
-                            attachedActions: [
-                                => this.do
-                                    object: this.cube2
-                                    actions: [
-                                        ['translate', ...this.cube2.transformationData.t1],
-                                        ['rotate'   , ...this.cube2.transformationData.r1],
-                                        ['translate', ...this.cube2.transformationData.t2],
-                                    ]
-                            ]
-                    ]
-
-                # render everything
-                this.renderer.render(this.scene, this.camera)
-                
-
-        mounted: ->
-            this.init()
-            this.animate()
+            // NOTE: this works but occasionally its jumpy, needs a way to smooth out the final jump/transition
+        },
+        dragStart(eventObj) {
+            this.startX = eventObj.clientX
+            this.startY = eventObj.clientY
+        },
+        dragging(eventObj) {
+            this.changeX = eventObj.clientX - this.startX
+            this.changeY = eventObj.clientY - this.startY
+            this.livePositionX = this.savedPositionX + this.changeX
+            this.livePositionY = this.savedPositionY + this.changeY
+        },
+        scroll(eventObj) {
+            // two fingers can actually go back
+            eventObj.preventDefault()
+            console.debug(`eventObj is:`,eventObj)
+            this.zoomPercent += eventObj.deltaY * 0.1
+        }
+    }
+}
 </script>

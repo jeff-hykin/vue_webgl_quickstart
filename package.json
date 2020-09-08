@@ -11,7 +11,7 @@
     "@vue/cli": "^3.11.0",
     "coffee": "^5.2.2",
     "core-js": "^3.2.1",
-    "css-baseline": "^1.1.4",
+    "css-baseline": "^1.1.10",
     "mathjs": "^6.2.1",
     "three": "^0.108.0",
     "three-orbitcontrols": "^2.108.1",
